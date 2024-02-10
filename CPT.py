@@ -69,10 +69,8 @@ def drawGamePageDetails(x):
         screen.blit(title_singleplayer, [141,50])
     title_font = pygame.font.SysFont('Calibri', 25, True, False)
     other_font = pygame.font.SysFont('Arial', 15, True, False)
-    title = title_font.render("Welcome to Tic Tac Toe!",True,BLACK)
-    credit_display = other_font.render("Made by Christian D'Souza ",True,BLACK)
-    screen.blit(title, [215, 150])
-    screen.blit(credit_display, [ 525, 625])
+    screen.blit(title_font.render("Welcome to Tic Tac Toe!",True,BLACK), [215, 150])
+    screen.blit(other_font.render("Made by Christian D'Souza ",True,BLACK), [ 525, 625])
 
 #set up variables to determine turns for players
 player_X = 0
@@ -132,13 +130,13 @@ def game_screen(type,win,param):
     drawGamePageDetails(type)
     drawRestartButton()
     drawExitButton(401,566,436,575)
-    for i in range(3): #draws empty board
-        for x in range(3):
-            pygame.draw.rect(screen,WHITE,[195+(103*i),195+(103*x),100,100])
+    for a in range(3): #draws empty board
+        for b in range(3):
+            pygame.draw.rect(screen,WHITE,[195+(103*a),195+(103*b),100,100])
     for i in range(0,3):
         for x in range(0,3):
             if grid[i][x] == 1: #draws an X
-                pygame.draw.rect(screen,GREEN,[(225+103*x)-30,(225+103*i)-30,100,100])
+                pygame.draw.rect(screen, GREEN, [(225+103*x)-30,(225+103*i)-30,100,100])
                 pygame.draw.line(screen, BLACK, [225+103*x, 225+103*i], [(225+103*x)+40, (225+103*i)+40], 3)
                 pygame.draw.line(screen, BLACK, [(225+103*x)+40, 225+103*i], [(225+103*x), (225+103*i)+40], 3)
             elif grid[i][x] == 2: #draws an O
