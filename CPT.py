@@ -43,40 +43,19 @@ def drawExitButton(x1,y1,x2,y2):
     title = restartFont.render("Exit",True,DGREEN)
     screen.blit(title, [x2, y2])
 
-#this function draws an X
-def drawAnX(screen,x,y):
-    pygame.draw.rect(screen,GREEN,[x-30,y-30,100,100])
-    pygame.draw.line(screen, BLACK, [x, y], [x+40, y+40], 3)
-    pygame.draw.line(screen, BLACK, [x+40, y], [x, y+40], 3)
-
-#this function draws an O
-def drawAnO(screen,x,y):
-    pygame.draw.rect(screen,YELLOW,[x-30,y-30,100,100])
-    pygame.draw.ellipse(screen, BLACK, [x,y,40,40],3)
-
-#this function draws the winning line
-def drawWinningLine(screen,startx,starty,endx,endy):
-    pygame.draw.line(screen, RED, [startx, starty], [endx, endy], 4)
-
 #fonts
 gameoverfont = pygame.font.SysFont('Arial', 15, True, False)
 game_over = gameoverfont.render("Game Over! ",True,BLACK)
 finish_font = pygame.font.SysFont('Arial', 15, True, False)
 
-#this function is used when X wins
-def drawWinnerX():
-    Xwins = finish_font.render("X Wins! ",True,BLACK)
-    screen.blit(Xwins, [318, 535])
-
-#this function is used when O wins
-def drawWinnerO():
-    Owins = finish_font.render("O Wins! ",True,BLACK)
-    screen.blit(Owins, [318, 535])
-
-#this function draws an indication of a draw/tie
-def drawTie():
-    Draw_Game = finish_font.render("Draw! ",True,BLACK)
-    screen.blit(Draw_Game, [318, 535])
+#this function is used to display the outcome of a game
+def drawWinnerMessage(win):
+    if win == 1:
+        screen.blit(finish_font.render("X Wins! ",True,BLACK), [318, 535])
+    elif win == 2:
+        screen.blit(finish_font.render("O Wins! ",True,BLACK), [318, 535])
+    elif win == 17:
+        screen.blit(finish_font.render("Draw! ",True,BLACK), [318, 535])
 
 #this function draws the details depending on game mode
 def drawGamePageDetails(x):
@@ -84,8 +63,10 @@ def drawGamePageDetails(x):
     game_over = gameoverfont.render("Game Over! ",True,BLACK)
     if x == 1:
         screen.fill(AQUA)
+        screen.blit(title_multiplayer, [141,50])
     elif x == 2:
         screen.fill(ORANGE)
+        screen.blit(title_singleplayer, [141,50])
     title_font = pygame.font.SysFont('Calibri', 25, True, False)
     other_font = pygame.font.SysFont('Arial', 15, True, False)
     title = title_font.render("Welcome to Tic Tac Toe!",True,BLACK)
@@ -100,45 +81,14 @@ turn = 1
 
 #this variable is used to end the game once a winner is determined;
 won_game = 0
-winner_param = [] #stores the winning line parameters and game outcome
-
-#this function draws an X or O depending on the value of the grid[x][y] DURING the game
-def drawLogic(xCoord, yCoord, num):
-    if grid[xCoord][yCoord] == num:
-        if won_game == 0:
-            if num == 1:
-                drawAnX(screen, 225+(yCoord*103), 225+(xCoord*103))
-            elif num == 2:
-                drawAnO(screen, 225+(yCoord*103), 225+(xCoord*103))
-
-#this function draws the scenerio AFTER the game has completed.
-def drawAfterGame():
-    for i in range(0,3):
-        for x in range(0,3):
-            if grid[i][x] == 1:
-                drawAnX(screen,225+103*x,225+103*i)
-            elif grid[i][x] == 2:
-                drawAnO(screen,225+103*x,225+103*i)
-
-#this function uses the drawLogic function for different in-game scenerios
-def drawAccumulatedGame():
-    for i in range(0,3):
-        for x in range(0,3):
-            #condition for player X
-            drawLogic(i,x,1)
-            #condition for player O
-            drawLogic(i,x,2)
+winner_param = [-1,-1,-1,-1,0] #stores the winning line parameters and game outcome
 
 #this function states the winnner and the winning line from (x1,y1) to (x2,y2)
-def drawDetermineWinner(x1, x2, y1, y2, winner):
+def drawDetermineWinner(x1, y1, x2, y2, winner):
     if winner != 0: #if the game is completed
-        drawAfterGame()
         screen.blit(game_over, [318, 515])
-        if winner == 1:
-            drawWinnerX()
-        elif winner == 2:
-            drawWinnerO()
-        drawWinningLine(screen,x1,x2,y1,y2)
+        drawWinnerMessage(winner)
+        pygame.draw.line(screen, RED, [x1, y1], [x2, y2], 4)
 
 #this function has all the home screen buttons drawn
 def drawMultiplayerButton():
@@ -156,12 +106,6 @@ def drawMultiplayerButton():
     screen.blit(multiplayer, [565, 315])
     screen.blit(how_to_play, [315, 415])
 
-#this function draws the empty grid
-def drawEmptyGrid():
-    for i in range(3):
-            for x in range(3):
-                pygame.draw.rect(screen,WHITE,[195+(103*i),195+(103*x),100,100])
-
 #this function checks if a win exists in the game, and modifies the winning parameter
 def checkIfWin():
     '''winning conditions for both players'''
@@ -178,32 +122,32 @@ def checkIfWin():
     #diagonal win top left to bottom right
     elif grid[0][0] == grid[1][1] and grid[1][1] == grid[2][2] and grid[0][0] != 0:
         return [1, [195, 195, 501, 501, grid[0][0]]]
-    return [checkIfTie(), []]
-
-#this function checks to see if the game had tied or is still going on
-def checkIfTie():
-    for i in range(0,3):
-        if grid[0][i] == 0 or grid[1][i] == 0 or grid[2][i] == 0:
-            return 0
-    return 17
+    for x in range(0,3): #check if tie or game still going on
+        if grid[0][x] == 0 or grid[1][x] == 0 or grid[2][x] == 0:
+            return [0,[-1,-1,-1,-1,0]]
+    return [17,[-1,-1,-1,-1,17]]
 
 #this function designs the screen based on the game mode
 def game_screen(type,win,param):
     drawGamePageDetails(type)
     drawRestartButton()
     drawExitButton(401,566,436,575)
-    drawEmptyGrid()
-    screen.blit(title_singleplayer, [141,50])
-    drawAccumulatedGame()
+    for i in range(3): #draws empty board
+        for x in range(3):
+            pygame.draw.rect(screen,WHITE,[195+(103*i),195+(103*x),100,100])
+    for i in range(0,3):
+        for x in range(0,3):
+            if grid[i][x] == 1: #draws an X
+                pygame.draw.rect(screen,GREEN,[(225+103*x)-30,(225+103*i)-30,100,100])
+                pygame.draw.line(screen, BLACK, [225+103*x, 225+103*i], [(225+103*x)+40, (225+103*i)+40], 3)
+                pygame.draw.line(screen, BLACK, [(225+103*x)+40, 225+103*i], [(225+103*x), (225+103*i)+40], 3)
+            elif grid[i][x] == 2: #draws an O
+                pygame.draw.rect(screen,YELLOW,[(225+103*x)-30,(225+103*i)-30,100,100])
+                pygame.draw.ellipse(screen, BLACK, [225+103*x,225+103*i,40,40],3)
     #check if game is already over
-    if win == 1: #checks if the game is already over by win
+    if win == 1 or win == 17: #checks if the game is already over by win
         drawDetermineWinner(param[0],param[1],param[2],param[3],param[4])
-        return [1,param]
-    elif win == 17: #checks if game is already over by draw
-        screen.blit(game_over, [318, 515])
-        drawTie()
-        drawAfterGame()
-        return [17,param]
+        return [win,param]
     #now check if the game is over or still going
     checkResult = checkIfWin()
     return [checkResult[0],checkResult[1]]
@@ -235,10 +179,8 @@ while not done:
                 if posy >= 300 and posy <= 350:
                     if posx >= 525 and posx <= 675:
                         home_screen = 1
-                        won_game = 0
                     elif posx >= 25 and posx <= 175:
                         home_screen = 2
-                        won_game = 0
                 if posy >= 400 and posy <= 450:
                     if posx >= 275 and posx <= 425:
                         home_screen = 3
@@ -247,178 +189,85 @@ while not done:
                     if posx >= 580 and posx <= 680:
                         home_screen = 0
             elif home_screen == 1 or home_screen == 2: #game screen (multiplayer and singleplayer)
-                if posx >= 195 and posx <= 295:
-                    if posy >= 566 and posy <= 599: #restart the game
-                        grid = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
-                        turn = 1
-                        won_game = 0
-                    elif posy >= 195 and posy <= 295:
-                        if grid[0][0] == 0:
-                            if won_game == 0:
-                                if turn == 1:
-                                    grid[0][0] = 1
+                for x in range(0,3): #store choice on board depending on where user clicks
+                    if posx >= 195+x*103 and posx <= 295+x*103:
+                        for i in range(0,3):
+                            if posy >= 195+i*103 and posy <= 295+i*103:
+                                if grid[i][x] == 0 and won_game == 0:
+                                    grid[i][x] = turn
                                     print (grid)
-                                    turn += 1
-                                else:
-                                    grid[0][0] = 2
-                                    print (grid)
-                                    turn -= 1
-                    elif posy >= 298 and posy <= 398:
-                        if grid[1][0] == 0:
-                            if won_game == 0:
-                                if turn == 1:
-                                    grid[1][0] = 1
-                                    print (grid)
-                                    turn += 1
-                                else:
-                                    grid[1][0] = 2
-                                    print (grid)
-                                    turn -= 1
-                    elif posy >= 401 and posy <= 501:
-                        if grid[2][0] == 0:
-                            if won_game == 0:
-                                if turn == 1:
-                                    grid[2][0] = 1
-                                    print (grid)
-                                    turn += 1
-                                else:
-                                    grid[2][0] = 2
-                                    print (grid)
-                                    turn -= 1
-                elif posx >= 298 and posx <= 398:
-                    if posy >= 195 and posy <= 295:
-                        if grid[0][1] == 0:
-                            if won_game == 0:
-                                if turn == 1:
-                                    grid[0][1] = 1
-                                    print (grid)
-                                    turn += 1
-                                else:
-                                    grid[0][1] = 2
-                                    print (grid)
-                                    turn -= 1
-                    if posy >= 298 and posy <= 398:
-                        if grid[1][1] == 0:
-                            if won_game == 0:
-                                if turn == 1:
-                                    grid[1][1] = 1
-                                    print (grid)
-                                    turn += 1
-                                else:
-                                    grid[1][1] = 2
-                                    print (grid)
-                                    turn -= 1
-                    if posy >= 401 and posy <= 501:
-                        if grid[2][1] == 0:
-                            if won_game == 0:
-                                if turn == 1:
-                                    grid[2][1] = 1
-                                    print (grid)
-                                    turn += 1
-                                else:
-                                    grid[2][1] = 2
-                                    print (grid)
-                                    turn -= 1
-                elif posx >= 401 and posx <= 501:
-                    if posy >= 566 and posy <= 599:
-                        grid = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
-                        turn = 1
-                        won_game = 0
-                        home_screen = 0
-                    if posy >= 195 and posy <= 295:
-                        if grid[0][2] == 0:
-                            if won_game == 0:
-                                if turn == 1:
-                                    grid[0][2] = 1
-                                    print (grid)
-                                    turn += 1
-                                else:
-                                    grid[0][2] = 2
-                                    print (grid)
-                                    turn -= 1
-                    if posy >= 298 and posy <= 398:
-                        if grid[1][2] == 0:
-                            if won_game == 0:
-                                if turn == 1:
-                                    grid[1][2] = 1
-                                    print (grid)
-                                    turn += 1
-                                else:
-                                    grid[1][2] = 2
-                                    print (grid)
-                                    turn -= 1
-                    if posy >= 401 and posy <= 501:
-                        if grid[2][2] == 0:
-                            if won_game == 0:
-                                if turn == 1:
-                                    grid[2][2] = 1
-                                    print (grid)
-                                    turn += 1
-                                else:
-                                    grid[2][2] = 2
-                                    print (grid)
-                                    turn -= 1
-                if home_screen == 2: #these conditions are for singleplayer bot strategies
-                    if turn == 2: 
-                        #if X starts anywhere but the middle, O plays the middle
-                        if grid == [[1, 0, 0], [0, 0, 0], [0, 0, 0]] or grid == [[0, 0, 1], [0, 0, 0], [0, 0, 0]] or grid == [[0, 0, 0], [0, 0, 0], [1, 0, 0]] or grid == [[0, 0, 0], [0, 0, 0], [0, 0, 1]] or grid == [[0, 1, 0], [0, 0, 0], [0, 0, 0]] or grid == [[0, 0, 0], [1, 0, 0], [0, 0, 0]] or grid == [[0, 0, 0], [0, 0, 1], [0, 0, 0]] or grid == [[0, 0, 0], [0, 0, 0], [0, 1, 0]]:
-                            grid[1][1] = 2
-                        #if X starts in the middle, O plays top-left corner
-                        elif grid == [[0, 0, 0], [0, 1, 0], [0, 0, 0]]:
-                            grid[0][0] = 2
-                        #second move
-                        elif grid == [[1, 0, 0], [1, 2, 0], [0, 0, 0]] or grid == [[2, 0, 1], [0, 1, 0], [0, 0, 0]] or grid == [[2, 0, 0], [0, 1, 0], [0, 0, 1]] or grid == [[1, 0, 0], [0, 2, 0], [0, 1, 0]] or grid == [[0, 0, 0], [0, 2, 0], [0, 1, 1]] or grid == [[0, 0, 0], [1, 2, 0], [0, 1, 0]]:
-                            grid[2][0] = 2
-                        elif grid == [[1, 0, 0], [0, 2, 0], [1, 0, 0]] or grid == [[2, 0, 0], [0, 1, 1], [0, 0, 0]] or grid == [[0, 1, 0], [0, 2, 0], [1, 0, 0]]:
-                            grid[1][0] = 2
-                        elif grid == [[1, 0, 0], [0, 2, 0], [0, 0, 1]] or grid == [[2, 1, 0], [0, 1, 0], [0, 0, 0]] or grid == [[0, 0, 0], [0, 2, 0], [1, 0, 1]]:
-                            grid[2][1] = 2
-                        elif grid == [[1, 0, 0], [0, 2, 1], [0, 0, 0]] or grid == [[2, 0, 0], [0, 1, 0], [0, 1, 0]] or grid == [[0, 0, 0], [1, 2, 0], [0, 0, 1]] or grid == [[1, 0, 1], [0, 2, 0], [0, 0, 0]] or grid == [[0, 0, 1], [1, 2, 0], [0, 0, 0]] or grid == [[0, 0, 1], [0, 2, 0], [1, 0, 0]] or grid == [[0, 0, 0], [0, 2, 1], [1, 0, 0]]:
-                            grid[0][1] = 2
-                        elif grid == [[1, 1, 0], [0, 2, 0], [0, 0, 0]] or grid == [[2, 0, 0], [0, 1, 0], [1, 0, 0]] or grid == [[0, 1, 0], [0, 2, 0], [0, 1, 0]] or grid == [[0, 1, 0], [0, 2, 0], [0, 0, 1]] or grid == [[0, 1, 0], [0, 2, 1], [0, 0, 0]] or grid == [[0, 0, 0], [0, 2, 1], [0, 0, 1]]:
-                            grid[0][2] = 2
-                        elif grid == [[0, 1, 0], [1, 2, 0], [0, 0, 0]] or grid == [[0, 1, 1], [0, 2, 0], [0, 0, 0]] or grid == [[0, 0, 0], [1, 2, 1], [0, 0, 0]] or grid == [[0, 0, 0], [1, 2, 0], [1, 0, 0]]:
-                            grid[0][0] = 2
-                        elif grid == [[0, 0, 1], [0, 2, 0], [0, 1, 0]] or grid == [[2, 0, 0], [1, 1, 0], [0, 0, 0]] or grid == [[0, 0, 1], [0, 2, 0], [0, 0, 1]]:
-                            grid[1][2] = 2
-                        elif grid == [[0, 0, 1], [0, 2, 1], [0, 0, 0]] or grid == [[0, 0, 0], [0, 2, 1], [0, 1, 0]] or grid == [[0, 0, 0], [0, 2, 0], [1, 1, 0]]:
-                            grid[2][2] = 2
-                        #third move
-                        elif grid == [[1, 1, 2], [0, 2, 0], [1, 0, 0]] or grid == [[2, 0, 0], [0, 1, 0], [2, 1, 1]] or grid == [[2, 0, 0], [0, 1, 1], [2, 0, 1]] or grid == [[2, 1, 0], [0, 1, 0], [2, 0, 1]] or grid == [[2, 0, 1], [0, 1, 0], [2, 0, 1]] or grid == [[2, 0, 1], [0, 1, 0], [2, 1, 0]] or grid == [[2, 0, 1], [0, 1, 1], [2, 0, 0]] or grid == [[2, 1, 1], [0, 1, 0], [2, 0, 0]] or grid == [[2, 1, 0], [0, 1, 0], [0, 2, 1]] or grid == [[2, 1, 0], [0, 1, 1], [0, 2, 0]] or grid == [[1, 0, 0], [0, 2, 0], [1, 1, 2]] or grid == [[0, 1, 0], [0, 2, 0], [1, 2, 1]] or grid == [[0, 1, 1], [0, 2, 2], [0, 1, 0]] or grid == [[1, 0, 1], [0, 2, 2], [0, 1, 0]] or grid == [[0, 0, 1], [0, 2, 2], [1, 1, 0]] or grid == [[1, 0, 1], [0, 2, 2], [0, 0, 1]] or grid == [[0, 1, 1], [0, 2, 2], [0, 0, 1]] or grid == [[0, 0, 1], [0, 2, 2], [1, 0, 1]] or grid == [[0, 0, 1], [0, 2, 2], [0, 1, 1]]:
-                            grid[1][0] = 2
-                        elif grid == [[1, 1, 2], [1, 2, 0], [0, 0, 0]] or grid == [[2, 0, 1], [1, 1, 2], [0, 0, 0]] or grid == [[2, 2, 1], [0, 1, 0], [0, 1, 0]] or grid == [[2, 0, 0], [2, 1, 1], [0, 0, 1]] or grid == [[2, 0, 0], [2, 1, 1], [0, 1, 0]] or grid == [[2, 0, 1], [2, 1, 1], [0, 0, 0]] or grid == [[2, 1, 0], [2, 1, 1], [0, 0, 0]] or grid == [[2, 1, 1], [0, 1, 0], [0, 2, 0]] or grid == [[0, 2, 0], [1, 2, 0], [0, 1, 1]] or grid == [[0, 0, 2], [0, 2, 1], [0, 1, 1]] or grid == [[0, 0, 2], [1, 2, 1], [0, 0, 1]] or grid == [[1, 0, 2], [0, 2, 1], [0, 0, 1]] or grid == [[0, 1, 2], [1, 2, 0], [0, 0, 1]] or grid == [[2, 1, 0], [1, 2, 0], [0, 0, 1]] or grid == [[0, 1, 2], [1, 2, 0], [0, 1, 0]] or grid == [[0, 1, 2], [0, 2, 0], [0, 1, 1]] or grid == [[0, 1, 2], [1, 2, 1], [0, 0, 0]] or grid == [[0, 1, 2], [0, 2, 1], [0, 1, 0]] or grid == [[0, 1, 2], [0, 2, 1], [0, 0, 1]] or grid == [[1, 2, 0], [0, 2, 1], [0, 1, 0]] or grid == [[1, 1, 2], [1, 2, 0], [0, 0, 0]] or grid == [[1, 1, 2], [0, 2, 1], [0, 0, 0]] or grid == [[1, 1, 2], [0, 2, 0], [0, 1, 0]] or grid == [[1, 1, 2], [0, 2, 0], [0, 0, 1]]:
-                            grid[2][0] = 2
-                        elif grid == [[1, 2, 1], [0, 2, 0], [0, 1, 0]] or grid == [[2, 0, 0], [1, 1, 0], [2, 0, 1]] or grid == [[2, 0, 1], [1, 1, 0], [2, 0, 0]] or grid == [[2, 1, 0], [1, 1, 0], [0, 2, 0]] or grid == [[0, 0, 1], [0, 2, 0], [2, 1, 1]] or grid == [[0, 1, 1], [2, 2, 0], [1, 0, 0]] or grid == [[0, 1, 0], [2, 2, 0], [1, 1, 0]] or grid == [[0, 1, 0], [2, 2, 0], [1, 0, 1]] or grid == [[2, 1, 1], [0, 2, 0], [0, 0, 1]] or grid == [[1, 1, 0], [2, 2, 0], [1, 0, 0]] or grid == [[1, 0, 0], [2, 2, 0], [1, 1, 0]] or grid == [[1, 0, 0], [2, 2, 0], [1, 0, 1]] or grid == [[1, 0, 1], [2, 2, 0], [1, 0, 0]]:
-                            grid[1][2] = 2
-                        elif grid == [[1, 2, 0], [0, 2, 1], [1, 0, 0]] or grid == [[2, 1, 0], [1, 1, 2], [0, 0, 0]] or grid == [[2, 1, 2], [0, 1, 0], [1, 0, 0]] or grid == [[2, 0, 0], [1, 2, 0], [1, 0, 1]] or grid == [[1, 2, 0], [1, 2, 0], [0, 0, 1]] or grid == [[0, 2, 0], [1, 2, 1], [0, 0, 1]] or grid == [[0, 2, 0], [1, 2, 0], [1, 0, 1]] or grid == [[0, 0, 2], [0, 2, 1], [1, 0, 1]] or grid == [[0, 2, 0], [1, 2, 1], [1, 0, 0]] or grid == [[0, 2, 0], [0, 2, 1], [1, 0, 1]] or grid == [[0, 2, 1], [1, 2, 1], [0, 0, 0]] or grid == [[0, 2, 1], [1, 2, 0], [0, 0, 1]] or grid == [[0, 2, 1], [1, 2, 0], [1, 0, 0]] or grid == [[0, 2, 1], [0, 2, 1], [1, 0, 0]] or grid == [[0, 2, 1], [0, 2, 0], [1, 0, 1]] or grid == [[0, 0, 1], [1, 2, 2], [0, 0, 1]] or grid == [[0, 1, 2], [0, 2, 0], [1, 0, 1]] or grid == [[1, 2, 0], [0, 2, 1], [0, 0, 1]] or grid == [[1, 2, 1], [1, 2, 0], [0, 0, 0]] or grid == [[1, 0, 0], [2, 2, 1], [1, 0, 0]] or grid == [[1, 2, 1], [0, 2, 1], [0, 0, 0]] or grid == [[1, 2, 1], [0, 2, 0], [1, 0, 0]] or grid == [[1, 2, 1], [0, 2, 0], [0, 0, 1]] or grid == [[1, 2, 0], [1, 2, 1], [0, 0, 0]]:
-                            grid[2][1] = 2
-                        elif grid == [[1, 1, 0], [1, 2, 0], [2, 0, 0]] or grid == [[2, 0, 0], [1, 1, 2], [0, 0, 1]] or grid == [[2, 0, 0], [1, 1, 2], [1, 0, 0]] or grid == [[2, 2, 0], [0, 1, 0], [0, 1, 1]] or grid == [[2, 2, 0], [0, 1, 0], [1, 1, 0]] or grid == [[2, 2, 0], [0, 1, 1], [0, 1, 0]] or grid == [[2, 2, 0], [1, 1, 0], [0, 1, 0]] or grid == [[2, 0, 0], [2, 1, 1], [1, 0, 0]] or grid == [[2, 1, 0], [0, 1, 0], [1, 2, 0]] or grid == [[0, 1, 0], [1, 2, 0], [2, 1, 0]] or grid == [[0, 0, 0], [1, 2, 1], [2, 1, 0]] or grid == [[0, 1, 0], [0, 2, 0], [2, 1, 1]] or grid == [[0, 0, 0], [1, 2, 0], [2, 1, 1]] or grid == [[0, 0, 0], [0, 2, 1], [2, 1, 1]] or grid == [[1, 0, 0], [0, 2, 1], [0, 1, 2]] or grid == [[2, 0, 0], [1, 2, 1], [0, 0, 1]] or grid == [[1, 0, 0], [1, 2, 1], [2, 0, 0]] or grid == [[1, 0, 0], [1, 2, 0], [2, 0, 1]] or grid == [[1, 1, 0], [0, 2, 0], [0, 2, 1]] or grid == [[1, 0, 0], [1, 2, 0], [2, 1, 0]] or grid == [[1, 1, 0], [0, 2, 0], [2, 1, 0]] or grid == [[1, 0, 0], [0, 2, 0], [2, 1, 1]] or grid == [[1, 0, 0], [0, 2, 1], [2, 1, 0]]:
-                            grid[0][2] = 2
-                        elif grid == [[1, 0, 1], [1, 2, 0], [2, 0, 0]] or grid == [[2, 0, 0], [1, 1, 2], [0, 1, 0]] or grid == [[2, 0, 2], [0, 1, 0], [1, 0, 1]] or grid == [[2, 0, 2], [0, 1, 0], [1, 1, 0]] or grid == [[2, 0, 2], [0, 1, 1], [1, 0, 0]] or grid == [[2, 0, 2], [1, 1, 0], [1, 0, 0]] or grid == [[0, 0, 1], [0, 2, 0], [1, 2, 1]] or grid == [[0, 0, 0], [1, 2, 0], [1, 2, 1]] or grid == [[0, 0, 0], [0, 2, 1], [1, 2, 1]] or grid == [[1, 0, 1], [0, 2, 1], [0, 0, 2]] or grid == [[1, 0, 1], [0, 2, 0], [2, 1, 0]] or grid == [[1, 0, 0], [1, 2, 0], [0, 2, 1]] or grid == [[1, 0, 0], [0, 2, 0], [1, 2, 1]] or grid == [[1, 0, 0], [0, 2, 1], [0, 2, 1]] or grid == [[1, 0, 1], [0, 2, 0], [0, 2, 1]]:
-                            grid[0][1] = 2
-                        elif grid == [[2, 1, 1], [1, 2, 0], [0, 0, 0]] or grid == [[0, 1, 2], [0, 2, 0], [1, 1, 0]] or grid == [[2, 0, 1], [1, 2, 0], [1, 0, 0]] or grid == [[2, 0, 0], [1, 2, 0], [1, 1, 0]] or grid == [[0, 2, 0], [0, 2, 1], [1, 1, 0]] or grid == [[2, 0, 1], [1, 2, 1], [0, 0, 0]] or grid == [[2, 0, 0], [1, 2, 1], [1, 0, 0]] or grid == [[2, 0, 0], [1, 2, 1], [0, 1, 0]] or grid == [[0, 2, 1], [1, 2, 0], [0, 1, 0]] or grid == [[0, 2, 1], [0, 2, 0], [1, 1, 0]] or grid == [[0, 1, 0], [2, 2, 1], [1, 0, 0]] or grid == [[2, 1, 0], [1, 2, 1], [0, 0, 0]] or grid == [[2, 1, 0], [1, 2, 0], [1, 0, 0]] or grid == [[2, 1, 0], [1, 2, 0], [0, 1, 0]] or grid == [[0, 1, 2], [0, 2, 1], [1, 0, 0]] or grid == [[2, 1, 1], [0, 2, 1], [0, 0, 0]] or grid == [[2, 1, 1], [0, 2, 0], [1, 0, 0]] or grid == [[2, 1, 1], [0, 2, 0], [0, 1, 0]]:
-                            grid[2][2] = 2
-                        elif grid == [[0, 1, 1], [0, 2, 1], [0, 0, 2]] or grid == [[0, 0, 0], [1, 2, 0], [1, 1, 2]] or grid == [[0, 1, 0], [0, 2, 0], [1, 1, 2]] or grid == [[0, 0, 1], [0, 2, 0], [1, 1, 2]] or grid == [[0, 0, 1], [1, 2, 0], [2, 1, 0]] or grid == [[0, 1, 0], [0, 2, 1], [0, 1, 2]] or grid == [[0, 0, 0], [1, 2, 1], [0, 1, 2]] or grid == [[0, 0, 0], [0, 2, 1], [1, 1, 2]] or grid == [[0, 0, 1], [1, 2, 2], [0, 1, 0]] or grid == [[0, 0, 1], [0, 2, 1], [0, 1, 2]] or grid == [[0, 0, 1], [1, 2, 1], [0, 0, 2]] or grid == [[0, 0, 1], [0, 2, 1], [1, 0, 2]]:
-                            grid[0][0] = 2
-                        #fourth move
-                        elif grid == [[1, 1, 2], [2, 2, 0], [1, 1, 0]] or grid == [[2, 2, 1], [1, 1, 0], [2, 1, 0]] or grid == [[2, 1, 2], [1, 1, 0], [1, 2, 0]] or grid == [[2, 1, 0], [1, 2, 0], [1, 2, 1]] or grid == [[2, 0, 1], [1, 2, 0], [2, 1, 1]] or grid == [[1, 1, 0], [2, 2, 0], [1, 1, 2]] or grid == [[1, 0, 1], [2, 2, 0], [1, 1, 2]] or grid == [[0, 2, 1], [1, 2, 0], [2, 1, 1]] or grid == [[1, 1, 0], [2, 2, 0], [1, 2, 1]] or grid == [[0, 1, 1], [2, 2, 0], [1, 2, 1]] or grid == [[2, 1, 1], [1, 2, 0], [2, 0, 1]] or grid == [[1, 1, 2], [0, 2, 0], [1, 1, 2]] or grid == [[0, 1, 2], [1, 2, 0], [1, 1, 2]] or grid == [[1, 2, 1], [0, 2, 0], [2, 1, 1]] or grid == [[1, 2, 1], [1, 2, 0], [2, 1, 0]] or grid == [[1, 1, 2], [2, 2, 0], [1, 0, 1]]:
-                            grid[1][2] = 2
-                        elif grid == [[1, 1, 2], [2, 2, 1], [1, 0, 0]] or grid == [[2, 1, 2], [1, 1, 2], [0, 0, 1]] or grid == [[2, 1, 0], [1, 1, 2], [2, 0, 1]] or grid == [[2, 1, 2], [2, 1, 1], [1, 0, 0]] or grid == [[2, 1, 1], [1, 1, 2], [2, 0, 0]] or grid == [[1, 2, 1], [1, 2, 1], [0, 0, 2]] or grid == [[1, 2, 1], [0, 2, 1], [1, 0, 2]] or grid == [[1, 2, 1], [1, 2, 1], [2, 0, 0]] or grid == [[1, 2, 1], [1, 2, 0], [2, 0, 1]]:
-                            grid[2][1] = 2
-                        elif grid == [[1, 2, 1], [0, 2, 2], [1, 1, 0]] or grid == [[2, 2, 1], [0, 1, 0], [2, 1, 1]] or grid == [[2, 2, 1], [0, 1, 1], [2, 1, 0]] or grid == [[2, 1, 2], [0, 1, 0], [1, 2, 1]] or grid == [[2, 1, 2], [0, 1, 1], [1, 2, 0]] or grid == [[2, 1, 1], [0, 1, 0], [2, 2, 1]] or grid == [[0, 1, 1], [0, 2, 2], [2, 1, 1]] or grid == [[1, 0, 1], [0, 2, 2], [2, 1, 1]] or grid == [[1, 2, 0], [0, 2, 1], [1, 1, 2]] or grid == [[1, 0, 2], [0, 2, 1], [1, 1, 2]] or grid == [[1, 2, 1], [0, 2, 0], [1, 1, 2]] or grid == [[1, 2, 1], [0, 2, 1], [0, 1, 2]] or grid == [[1, 1, 2], [0, 2, 1], [1, 0, 2]] or grid == [[2, 1, 1], [0, 2, 2], [0, 1, 1]] or grid == [[2, 1, 1], [0, 2, 2], [1, 0, 1]] or grid == [[1, 1, 2], [0, 2, 0], [1, 2, 1]] or grid == [[1, 2, 1], [0, 2, 2], [0, 1, 1]]:
-                            grid[1][0] = 2
-                        elif grid == [[1, 2, 1], [1, 2, 2], [0, 1, 0]] or grid == [[2, 1, 1], [2, 1, 0], [0, 2, 1]] or grid == [[2, 2, 1], [1, 1, 2], [0, 1, 0]] or grid == [[2, 1, 0], [2, 1, 1], [0, 2, 1]] or grid == [[2, 1, 1], [2, 1, 1], [0, 2, 0]] or grid == [[2, 1, 1], [1, 1, 2], [0, 2, 0]] or grid == [[2, 1, 2], [1, 2, 1], [0, 0, 1]] or grid == [[1, 1, 2], [0, 2, 1], [0, 1, 2]] or grid == [[1, 0, 2], [1, 2, 1], [0, 1, 2]] or grid == [[1, 2, 1], [1, 2, 0], [0, 1, 2]] or grid == [[2, 0, 1], [1, 2, 2], [0, 1, 1]] or grid == [[2, 1, 1], [1, 2, 2], [0, 0, 1]] or grid == [[1, 1, 2], [0, 2, 1], [0, 2, 1]] or grid == [[1, 1, 2], [1, 2, 0], [0, 2, 1]]:
-                            grid[2][0] = 2
-                        elif grid == [[1, 2, 0], [1, 2, 1], [2, 1, 0]] or grid == [[2, 1, 0], [2, 1, 0], [1, 2, 1]] or grid == [[2, 2, 0], [1, 1, 2], [0, 1, 1]] or grid == [[2, 2, 0], [1, 1, 2], [1, 1, 0]] or grid == [[2, 1, 0], [2, 1, 1], [1, 2, 0]] or grid == [[2, 1, 0], [1, 1, 2], [0, 2, 1]] or grid == [[2, 1, 0], [1, 1, 2], [1, 2, 0]] or grid == [[0, 2, 0], [1, 2, 1], [2, 1, 1]] or grid == [[1, 2, 0], [1, 2, 0], [2, 1, 1]] or grid == [[0, 1, 0], [2, 2, 1], [1, 2, 1]] or grid == [[2, 1, 0], [1, 2, 0], [2, 1, 1]] or grid == [[2, 1, 0], [1, 2, 1], [2, 0, 1]] or grid == [[1, 1, 0], [2, 2, 1], [1, 0, 2]] or grid == [[1, 1, 0], [2, 2, 1], [1, 2, 0]] or grid == [[1, 2, 0], [0, 2, 1], [2, 1, 1]]:
-                            grid[0][2] = 2
-                        elif grid == [[1, 2, 1], [0, 2, 1], [2, 1, 0]] or grid == [[2, 0, 2], [1, 1, 2], [1, 1, 0]] or grid == [[2, 1, 2], [1, 1, 2], [1, 0, 0]] or grid == [[2, 1, 1], [0, 1, 1], [2, 2, 0]] or grid == [[2, 1, 1], [1, 1, 0], [2, 2, 0]] or grid == [[2, 1, 1], [1, 2, 0], [2, 1, 0]] or grid == [[2, 0, 1], [1, 2, 1], [2, 1, 0]] or grid == [[2, 1, 1], [1, 2, 2], [0, 1, 0]] or grid == [[2, 0, 1], [1, 2, 2], [1, 1, 0]]:
-                            grid[2][2] = 2
-                        elif grid == [[1, 0, 1], [2, 2, 1], [1, 2, 0]] or grid == [[2, 0, 2], [1, 1, 2], [1, 0, 1]] or grid == [[2, 0, 2], [1, 1, 2], [1, 0, 1]] or grid == [[2, 0, 2], [1, 1, 2], [0, 1, 1]] or grid == [[2, 0, 0], [1, 1, 2], [2, 1, 1]] or grid == [[2, 0, 2], [2, 1, 1], [1, 0, 1]] or grid == [[2, 0, 2], [2, 1, 1], [1, 1, 0]] or grid == [[2, 0, 1], [1, 1, 2], [2, 0, 1]] or grid == [[2, 0, 1], [1, 1, 2], [2, 1, 0]] or grid == [[2, 0, 0], [1, 2, 1], [1, 2, 1]] or grid == [[2, 0, 1], [1, 2, 0], [1, 2, 1]] or grid == [[1, 0, 0], [2, 2, 1], [1, 1, 2]] or grid == [[0, 0, 1], [1, 2, 2], [2, 1, 1]] or grid == [[2, 0, 2], [1, 2, 1], [1, 0, 1]] or grid == [[2, 0, 2], [1, 2, 1], [0, 1, 1]] or grid == [[0, 0, 2], [1, 2, 1], [1, 2, 1]] or grid == [[1, 0, 2], [0, 2, 1], [1, 2, 1]] or grid == [[1, 0, 1], [1, 2, 2], [0, 2, 1]] or grid == [[0, 0, 1], [1, 2, 2], [1, 2, 1]] or grid == [[1, 0, 0], [2, 2, 1], [1, 2, 1]]:
-                            grid[0][1] = 2
-                        elif grid == [[0, 1, 2], [0, 2, 1], [1, 1, 2]] or grid == [[0, 2, 0], [1, 2, 1], [1, 1, 2]] or grid == [[0, 2, 1], [1, 2, 1], [0, 1, 2]] or grid == [[0, 2, 1], [1, 2, 0], [1, 1, 2]] or grid == [[0, 2, 1], [0, 2, 1], [1, 1, 2]] or grid == [[0, 1, 1], [1, 2, 2], [0, 2, 1]] or grid == [[0, 1, 1], [2, 2, 1], [1, 0, 2]] or grid == [[0, 1, 0], [2, 2, 1], [1, 1, 2]] or grid == [[0, 1, 2], [1, 2, 0], [1, 2, 1]] or grid == [[0, 1, 2], [0, 2, 1], [1, 2, 1]] or grid == [[0, 1, 2], [1, 2, 1], [1, 0, 2]]:
-                            grid[0][0] = 2
-                        turn -= 1
-                        print (grid)
+                                    if turn == 1:
+                                        turn += 1
+                                    else:
+                                        turn -= 1
+                                    break
+                            elif posy >= 566 and posy <= 599 and x != 1:
+                                grid = [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+                                turn = 1
+                                won_game = 0
+                                if x == 2:
+                                    home_screen = 0
+                                break
+                if home_screen == 2 and turn == 2: #these conditions are for singleplayer bot strategies
+                    #if X starts anywhere but the middle, O plays the middle
+                    if grid == [[1, 0, 0], [0, 0, 0], [0, 0, 0]] or grid == [[0, 0, 1], [0, 0, 0], [0, 0, 0]] or grid == [[0, 0, 0], [0, 0, 0], [1, 0, 0]] or grid == [[0, 0, 0], [0, 0, 0], [0, 0, 1]] or grid == [[0, 1, 0], [0, 0, 0], [0, 0, 0]] or grid == [[0, 0, 0], [1, 0, 0], [0, 0, 0]] or grid == [[0, 0, 0], [0, 0, 1], [0, 0, 0]] or grid == [[0, 0, 0], [0, 0, 0], [0, 1, 0]]:
+                        grid[1][1] = 2
+                    #if X starts in the middle, O plays top-left corner
+                    elif grid == [[0, 0, 0], [0, 1, 0], [0, 0, 0]]:
+                        grid[0][0] = 2
+                    #second move
+                    elif grid == [[1, 0, 0], [1, 2, 0], [0, 0, 0]] or grid == [[2, 0, 1], [0, 1, 0], [0, 0, 0]] or grid == [[2, 0, 0], [0, 1, 0], [0, 0, 1]] or grid == [[1, 0, 0], [0, 2, 0], [0, 1, 0]] or grid == [[0, 0, 0], [0, 2, 0], [0, 1, 1]] or grid == [[0, 0, 0], [1, 2, 0], [0, 1, 0]]:
+                        grid[2][0] = 2
+                    elif grid == [[1, 0, 0], [0, 2, 0], [1, 0, 0]] or grid == [[2, 0, 0], [0, 1, 1], [0, 0, 0]] or grid == [[0, 1, 0], [0, 2, 0], [1, 0, 0]]:
+                        grid[1][0] = 2
+                    elif grid == [[1, 0, 0], [0, 2, 0], [0, 0, 1]] or grid == [[2, 1, 0], [0, 1, 0], [0, 0, 0]] or grid == [[0, 0, 0], [0, 2, 0], [1, 0, 1]]:
+                        grid[2][1] = 2
+                    elif grid == [[1, 0, 0], [0, 2, 1], [0, 0, 0]] or grid == [[2, 0, 0], [0, 1, 0], [0, 1, 0]] or grid == [[0, 0, 0], [1, 2, 0], [0, 0, 1]] or grid == [[1, 0, 1], [0, 2, 0], [0, 0, 0]] or grid == [[0, 0, 1], [1, 2, 0], [0, 0, 0]] or grid == [[0, 0, 1], [0, 2, 0], [1, 0, 0]] or grid == [[0, 0, 0], [0, 2, 1], [1, 0, 0]]:
+                        grid[0][1] = 2
+                    elif grid == [[1, 1, 0], [0, 2, 0], [0, 0, 0]] or grid == [[2, 0, 0], [0, 1, 0], [1, 0, 0]] or grid == [[0, 1, 0], [0, 2, 0], [0, 1, 0]] or grid == [[0, 1, 0], [0, 2, 0], [0, 0, 1]] or grid == [[0, 1, 0], [0, 2, 1], [0, 0, 0]] or grid == [[0, 0, 0], [0, 2, 1], [0, 0, 1]]:
+                        grid[0][2] = 2
+                    elif grid == [[0, 1, 0], [1, 2, 0], [0, 0, 0]] or grid == [[0, 1, 1], [0, 2, 0], [0, 0, 0]] or grid == [[0, 0, 0], [1, 2, 1], [0, 0, 0]] or grid == [[0, 0, 0], [1, 2, 0], [1, 0, 0]]:
+                        grid[0][0] = 2
+                    elif grid == [[0, 0, 1], [0, 2, 0], [0, 1, 0]] or grid == [[2, 0, 0], [1, 1, 0], [0, 0, 0]] or grid == [[0, 0, 1], [0, 2, 0], [0, 0, 1]]:
+                        grid[1][2] = 2
+                    elif grid == [[0, 0, 1], [0, 2, 1], [0, 0, 0]] or grid == [[0, 0, 0], [0, 2, 1], [0, 1, 0]] or grid == [[0, 0, 0], [0, 2, 0], [1, 1, 0]]:
+                        grid[2][2] = 2
+                    #third move
+                    elif grid == [[1, 1, 2], [0, 2, 0], [1, 0, 0]] or grid == [[2, 0, 0], [0, 1, 0], [2, 1, 1]] or grid == [[2, 0, 0], [0, 1, 1], [2, 0, 1]] or grid == [[2, 1, 0], [0, 1, 0], [2, 0, 1]] or grid == [[2, 0, 1], [0, 1, 0], [2, 0, 1]] or grid == [[2, 0, 1], [0, 1, 0], [2, 1, 0]] or grid == [[2, 0, 1], [0, 1, 1], [2, 0, 0]] or grid == [[2, 1, 1], [0, 1, 0], [2, 0, 0]] or grid == [[2, 1, 0], [0, 1, 0], [0, 2, 1]] or grid == [[2, 1, 0], [0, 1, 1], [0, 2, 0]] or grid == [[1, 0, 0], [0, 2, 0], [1, 1, 2]] or grid == [[0, 1, 0], [0, 2, 0], [1, 2, 1]] or grid == [[0, 1, 1], [0, 2, 2], [0, 1, 0]] or grid == [[1, 0, 1], [0, 2, 2], [0, 1, 0]] or grid == [[0, 0, 1], [0, 2, 2], [1, 1, 0]] or grid == [[1, 0, 1], [0, 2, 2], [0, 0, 1]] or grid == [[0, 1, 1], [0, 2, 2], [0, 0, 1]] or grid == [[0, 0, 1], [0, 2, 2], [1, 0, 1]] or grid == [[0, 0, 1], [0, 2, 2], [0, 1, 1]]:
+                        grid[1][0] = 2
+                    elif grid == [[1, 1, 2], [1, 2, 0], [0, 0, 0]] or grid == [[2, 0, 1], [1, 1, 2], [0, 0, 0]] or grid == [[2, 2, 1], [0, 1, 0], [0, 1, 0]] or grid == [[2, 0, 0], [2, 1, 1], [0, 0, 1]] or grid == [[2, 0, 0], [2, 1, 1], [0, 1, 0]] or grid == [[2, 0, 1], [2, 1, 1], [0, 0, 0]] or grid == [[2, 1, 0], [2, 1, 1], [0, 0, 0]] or grid == [[2, 1, 1], [0, 1, 0], [0, 2, 0]] or grid == [[0, 2, 0], [1, 2, 0], [0, 1, 1]] or grid == [[0, 0, 2], [0, 2, 1], [0, 1, 1]] or grid == [[0, 0, 2], [1, 2, 1], [0, 0, 1]] or grid == [[1, 0, 2], [0, 2, 1], [0, 0, 1]] or grid == [[0, 1, 2], [1, 2, 0], [0, 0, 1]] or grid == [[2, 1, 0], [1, 2, 0], [0, 0, 1]] or grid == [[0, 1, 2], [1, 2, 0], [0, 1, 0]] or grid == [[0, 1, 2], [0, 2, 0], [0, 1, 1]] or grid == [[0, 1, 2], [1, 2, 1], [0, 0, 0]] or grid == [[0, 1, 2], [0, 2, 1], [0, 1, 0]] or grid == [[0, 1, 2], [0, 2, 1], [0, 0, 1]] or grid == [[1, 2, 0], [0, 2, 1], [0, 1, 0]] or grid == [[1, 1, 2], [1, 2, 0], [0, 0, 0]] or grid == [[1, 1, 2], [0, 2, 1], [0, 0, 0]] or grid == [[1, 1, 2], [0, 2, 0], [0, 1, 0]] or grid == [[1, 1, 2], [0, 2, 0], [0, 0, 1]]:
+                        grid[2][0] = 2
+                    elif grid == [[1, 2, 1], [0, 2, 0], [0, 1, 0]] or grid == [[2, 0, 0], [1, 1, 0], [2, 0, 1]] or grid == [[2, 0, 1], [1, 1, 0], [2, 0, 0]] or grid == [[2, 1, 0], [1, 1, 0], [0, 2, 0]] or grid == [[0, 0, 1], [0, 2, 0], [2, 1, 1]] or grid == [[0, 1, 1], [2, 2, 0], [1, 0, 0]] or grid == [[0, 1, 0], [2, 2, 0], [1, 1, 0]] or grid == [[0, 1, 0], [2, 2, 0], [1, 0, 1]] or grid == [[2, 1, 1], [0, 2, 0], [0, 0, 1]] or grid == [[1, 1, 0], [2, 2, 0], [1, 0, 0]] or grid == [[1, 0, 0], [2, 2, 0], [1, 1, 0]] or grid == [[1, 0, 0], [2, 2, 0], [1, 0, 1]] or grid == [[1, 0, 1], [2, 2, 0], [1, 0, 0]]:
+                        grid[1][2] = 2
+                    elif grid == [[1, 2, 0], [0, 2, 1], [1, 0, 0]] or grid == [[2, 1, 0], [1, 1, 2], [0, 0, 0]] or grid == [[2, 1, 2], [0, 1, 0], [1, 0, 0]] or grid == [[2, 0, 0], [1, 2, 0], [1, 0, 1]] or grid == [[1, 2, 0], [1, 2, 0], [0, 0, 1]] or grid == [[0, 2, 0], [1, 2, 1], [0, 0, 1]] or grid == [[0, 2, 0], [1, 2, 0], [1, 0, 1]] or grid == [[0, 0, 2], [0, 2, 1], [1, 0, 1]] or grid == [[0, 2, 0], [1, 2, 1], [1, 0, 0]] or grid == [[0, 2, 0], [0, 2, 1], [1, 0, 1]] or grid == [[0, 2, 1], [1, 2, 1], [0, 0, 0]] or grid == [[0, 2, 1], [1, 2, 0], [0, 0, 1]] or grid == [[0, 2, 1], [1, 2, 0], [1, 0, 0]] or grid == [[0, 2, 1], [0, 2, 1], [1, 0, 0]] or grid == [[0, 2, 1], [0, 2, 0], [1, 0, 1]] or grid == [[0, 0, 1], [1, 2, 2], [0, 0, 1]] or grid == [[0, 1, 2], [0, 2, 0], [1, 0, 1]] or grid == [[1, 2, 0], [0, 2, 1], [0, 0, 1]] or grid == [[1, 2, 1], [1, 2, 0], [0, 0, 0]] or grid == [[1, 0, 0], [2, 2, 1], [1, 0, 0]] or grid == [[1, 2, 1], [0, 2, 1], [0, 0, 0]] or grid == [[1, 2, 1], [0, 2, 0], [1, 0, 0]] or grid == [[1, 2, 1], [0, 2, 0], [0, 0, 1]] or grid == [[1, 2, 0], [1, 2, 1], [0, 0, 0]]:
+                        grid[2][1] = 2
+                    elif grid == [[1, 1, 0], [1, 2, 0], [2, 0, 0]] or grid == [[2, 0, 0], [1, 1, 2], [0, 0, 1]] or grid == [[2, 0, 0], [1, 1, 2], [1, 0, 0]] or grid == [[2, 2, 0], [0, 1, 0], [0, 1, 1]] or grid == [[2, 2, 0], [0, 1, 0], [1, 1, 0]] or grid == [[2, 2, 0], [0, 1, 1], [0, 1, 0]] or grid == [[2, 2, 0], [1, 1, 0], [0, 1, 0]] or grid == [[2, 0, 0], [2, 1, 1], [1, 0, 0]] or grid == [[2, 1, 0], [0, 1, 0], [1, 2, 0]] or grid == [[0, 1, 0], [1, 2, 0], [2, 1, 0]] or grid == [[0, 0, 0], [1, 2, 1], [2, 1, 0]] or grid == [[0, 1, 0], [0, 2, 0], [2, 1, 1]] or grid == [[0, 0, 0], [1, 2, 0], [2, 1, 1]] or grid == [[0, 0, 0], [0, 2, 1], [2, 1, 1]] or grid == [[1, 0, 0], [0, 2, 1], [0, 1, 2]] or grid == [[2, 0, 0], [1, 2, 1], [0, 0, 1]] or grid == [[1, 0, 0], [1, 2, 1], [2, 0, 0]] or grid == [[1, 0, 0], [1, 2, 0], [2, 0, 1]] or grid == [[1, 1, 0], [0, 2, 0], [0, 2, 1]] or grid == [[1, 0, 0], [1, 2, 0], [2, 1, 0]] or grid == [[1, 1, 0], [0, 2, 0], [2, 1, 0]] or grid == [[1, 0, 0], [0, 2, 0], [2, 1, 1]] or grid == [[1, 0, 0], [0, 2, 1], [2, 1, 0]]:
+                        grid[0][2] = 2
+                    elif grid == [[1, 0, 1], [1, 2, 0], [2, 0, 0]] or grid == [[2, 0, 0], [1, 1, 2], [0, 1, 0]] or grid == [[2, 0, 2], [0, 1, 0], [1, 0, 1]] or grid == [[2, 0, 2], [0, 1, 0], [1, 1, 0]] or grid == [[2, 0, 2], [0, 1, 1], [1, 0, 0]] or grid == [[2, 0, 2], [1, 1, 0], [1, 0, 0]] or grid == [[0, 0, 1], [0, 2, 0], [1, 2, 1]] or grid == [[0, 0, 0], [1, 2, 0], [1, 2, 1]] or grid == [[0, 0, 0], [0, 2, 1], [1, 2, 1]] or grid == [[1, 0, 1], [0, 2, 1], [0, 0, 2]] or grid == [[1, 0, 1], [0, 2, 0], [2, 1, 0]] or grid == [[1, 0, 0], [1, 2, 0], [0, 2, 1]] or grid == [[1, 0, 0], [0, 2, 0], [1, 2, 1]] or grid == [[1, 0, 0], [0, 2, 1], [0, 2, 1]] or grid == [[1, 0, 1], [0, 2, 0], [0, 2, 1]]:
+                        grid[0][1] = 2
+                    elif grid == [[2, 1, 1], [1, 2, 0], [0, 0, 0]] or grid == [[0, 1, 2], [0, 2, 0], [1, 1, 0]] or grid == [[2, 0, 1], [1, 2, 0], [1, 0, 0]] or grid == [[2, 0, 0], [1, 2, 0], [1, 1, 0]] or grid == [[0, 2, 0], [0, 2, 1], [1, 1, 0]] or grid == [[2, 0, 1], [1, 2, 1], [0, 0, 0]] or grid == [[2, 0, 0], [1, 2, 1], [1, 0, 0]] or grid == [[2, 0, 0], [1, 2, 1], [0, 1, 0]] or grid == [[0, 2, 1], [1, 2, 0], [0, 1, 0]] or grid == [[0, 2, 1], [0, 2, 0], [1, 1, 0]] or grid == [[0, 1, 0], [2, 2, 1], [1, 0, 0]] or grid == [[2, 1, 0], [1, 2, 1], [0, 0, 0]] or grid == [[2, 1, 0], [1, 2, 0], [1, 0, 0]] or grid == [[2, 1, 0], [1, 2, 0], [0, 1, 0]] or grid == [[0, 1, 2], [0, 2, 1], [1, 0, 0]] or grid == [[2, 1, 1], [0, 2, 1], [0, 0, 0]] or grid == [[2, 1, 1], [0, 2, 0], [1, 0, 0]] or grid == [[2, 1, 1], [0, 2, 0], [0, 1, 0]]:
+                        grid[2][2] = 2
+                    elif grid == [[0, 1, 1], [0, 2, 1], [0, 0, 2]] or grid == [[0, 0, 0], [1, 2, 0], [1, 1, 2]] or grid == [[0, 1, 0], [0, 2, 0], [1, 1, 2]] or grid == [[0, 0, 1], [0, 2, 0], [1, 1, 2]] or grid == [[0, 0, 1], [1, 2, 0], [2, 1, 0]] or grid == [[0, 1, 0], [0, 2, 1], [0, 1, 2]] or grid == [[0, 0, 0], [1, 2, 1], [0, 1, 2]] or grid == [[0, 0, 0], [0, 2, 1], [1, 1, 2]] or grid == [[0, 0, 1], [1, 2, 2], [0, 1, 0]] or grid == [[0, 0, 1], [0, 2, 1], [0, 1, 2]] or grid == [[0, 0, 1], [1, 2, 1], [0, 0, 2]] or grid == [[0, 0, 1], [0, 2, 1], [1, 0, 2]]:
+                        grid[0][0] = 2
+                    #fourth move
+                    elif grid == [[1, 1, 2], [2, 2, 0], [1, 1, 0]] or grid == [[2, 2, 1], [1, 1, 0], [2, 1, 0]] or grid == [[2, 1, 2], [1, 1, 0], [1, 2, 0]] or grid == [[2, 1, 0], [1, 2, 0], [1, 2, 1]] or grid == [[2, 0, 1], [1, 2, 0], [2, 1, 1]] or grid == [[1, 1, 0], [2, 2, 0], [1, 1, 2]] or grid == [[1, 0, 1], [2, 2, 0], [1, 1, 2]] or grid == [[0, 2, 1], [1, 2, 0], [2, 1, 1]] or grid == [[1, 1, 0], [2, 2, 0], [1, 2, 1]] or grid == [[0, 1, 1], [2, 2, 0], [1, 2, 1]] or grid == [[2, 1, 1], [1, 2, 0], [2, 0, 1]] or grid == [[1, 1, 2], [0, 2, 0], [1, 1, 2]] or grid == [[0, 1, 2], [1, 2, 0], [1, 1, 2]] or grid == [[1, 2, 1], [0, 2, 0], [2, 1, 1]] or grid == [[1, 2, 1], [1, 2, 0], [2, 1, 0]] or grid == [[1, 1, 2], [2, 2, 0], [1, 0, 1]]:
+                        grid[1][2] = 2
+                    elif grid == [[1, 1, 2], [2, 2, 1], [1, 0, 0]] or grid == [[2, 1, 2], [1, 1, 2], [0, 0, 1]] or grid == [[2, 1, 0], [1, 1, 2], [2, 0, 1]] or grid == [[2, 1, 2], [2, 1, 1], [1, 0, 0]] or grid == [[2, 1, 1], [1, 1, 2], [2, 0, 0]] or grid == [[1, 2, 1], [1, 2, 1], [0, 0, 2]] or grid == [[1, 2, 1], [0, 2, 1], [1, 0, 2]] or grid == [[1, 2, 1], [1, 2, 1], [2, 0, 0]] or grid == [[1, 2, 1], [1, 2, 0], [2, 0, 1]]:
+                        grid[2][1] = 2
+                    elif grid == [[1, 2, 1], [0, 2, 2], [1, 1, 0]] or grid == [[2, 2, 1], [0, 1, 0], [2, 1, 1]] or grid == [[2, 2, 1], [0, 1, 1], [2, 1, 0]] or grid == [[2, 1, 2], [0, 1, 0], [1, 2, 1]] or grid == [[2, 1, 2], [0, 1, 1], [1, 2, 0]] or grid == [[2, 1, 1], [0, 1, 0], [2, 2, 1]] or grid == [[0, 1, 1], [0, 2, 2], [2, 1, 1]] or grid == [[1, 0, 1], [0, 2, 2], [2, 1, 1]] or grid == [[1, 2, 0], [0, 2, 1], [1, 1, 2]] or grid == [[1, 0, 2], [0, 2, 1], [1, 1, 2]] or grid == [[1, 2, 1], [0, 2, 0], [1, 1, 2]] or grid == [[1, 2, 1], [0, 2, 1], [0, 1, 2]] or grid == [[1, 1, 2], [0, 2, 1], [1, 0, 2]] or grid == [[2, 1, 1], [0, 2, 2], [0, 1, 1]] or grid == [[2, 1, 1], [0, 2, 2], [1, 0, 1]] or grid == [[1, 1, 2], [0, 2, 0], [1, 2, 1]] or grid == [[1, 2, 1], [0, 2, 2], [0, 1, 1]]:
+                        grid[1][0] = 2
+                    elif grid == [[1, 2, 1], [1, 2, 2], [0, 1, 0]] or grid == [[2, 1, 1], [2, 1, 0], [0, 2, 1]] or grid == [[2, 2, 1], [1, 1, 2], [0, 1, 0]] or grid == [[2, 1, 0], [2, 1, 1], [0, 2, 1]] or grid == [[2, 1, 1], [2, 1, 1], [0, 2, 0]] or grid == [[2, 1, 1], [1, 1, 2], [0, 2, 0]] or grid == [[2, 1, 2], [1, 2, 1], [0, 0, 1]] or grid == [[1, 1, 2], [0, 2, 1], [0, 1, 2]] or grid == [[1, 0, 2], [1, 2, 1], [0, 1, 2]] or grid == [[1, 2, 1], [1, 2, 0], [0, 1, 2]] or grid == [[2, 0, 1], [1, 2, 2], [0, 1, 1]] or grid == [[2, 1, 1], [1, 2, 2], [0, 0, 1]] or grid == [[1, 1, 2], [0, 2, 1], [0, 2, 1]] or grid == [[1, 1, 2], [1, 2, 0], [0, 2, 1]]:
+                        grid[2][0] = 2
+                    elif grid == [[1, 2, 0], [1, 2, 1], [2, 1, 0]] or grid == [[2, 1, 0], [2, 1, 0], [1, 2, 1]] or grid == [[2, 2, 0], [1, 1, 2], [0, 1, 1]] or grid == [[2, 2, 0], [1, 1, 2], [1, 1, 0]] or grid == [[2, 1, 0], [2, 1, 1], [1, 2, 0]] or grid == [[2, 1, 0], [1, 1, 2], [0, 2, 1]] or grid == [[2, 1, 0], [1, 1, 2], [1, 2, 0]] or grid == [[0, 2, 0], [1, 2, 1], [2, 1, 1]] or grid == [[1, 2, 0], [1, 2, 0], [2, 1, 1]] or grid == [[0, 1, 0], [2, 2, 1], [1, 2, 1]] or grid == [[2, 1, 0], [1, 2, 0], [2, 1, 1]] or grid == [[2, 1, 0], [1, 2, 1], [2, 0, 1]] or grid == [[1, 1, 0], [2, 2, 1], [1, 0, 2]] or grid == [[1, 1, 0], [2, 2, 1], [1, 2, 0]] or grid == [[1, 2, 0], [0, 2, 1], [2, 1, 1]]:
+                        grid[0][2] = 2
+                    elif grid == [[1, 2, 1], [0, 2, 1], [2, 1, 0]] or grid == [[2, 0, 2], [1, 1, 2], [1, 1, 0]] or grid == [[2, 1, 2], [1, 1, 2], [1, 0, 0]] or grid == [[2, 1, 1], [0, 1, 1], [2, 2, 0]] or grid == [[2, 1, 1], [1, 1, 0], [2, 2, 0]] or grid == [[2, 1, 1], [1, 2, 0], [2, 1, 0]] or grid == [[2, 0, 1], [1, 2, 1], [2, 1, 0]] or grid == [[2, 1, 1], [1, 2, 2], [0, 1, 0]] or grid == [[2, 0, 1], [1, 2, 2], [1, 1, 0]]:
+                        grid[2][2] = 2
+                    elif grid == [[1, 0, 1], [2, 2, 1], [1, 2, 0]] or grid == [[2, 0, 2], [1, 1, 2], [1, 0, 1]] or grid == [[2, 0, 2], [1, 1, 2], [1, 0, 1]] or grid == [[2, 0, 2], [1, 1, 2], [0, 1, 1]] or grid == [[2, 0, 0], [1, 1, 2], [2, 1, 1]] or grid == [[2, 0, 2], [2, 1, 1], [1, 0, 1]] or grid == [[2, 0, 2], [2, 1, 1], [1, 1, 0]] or grid == [[2, 0, 1], [1, 1, 2], [2, 0, 1]] or grid == [[2, 0, 1], [1, 1, 2], [2, 1, 0]] or grid == [[2, 0, 0], [1, 2, 1], [1, 2, 1]] or grid == [[2, 0, 1], [1, 2, 0], [1, 2, 1]] or grid == [[1, 0, 0], [2, 2, 1], [1, 1, 2]] or grid == [[0, 0, 1], [1, 2, 2], [2, 1, 1]] or grid == [[2, 0, 2], [1, 2, 1], [1, 0, 1]] or grid == [[2, 0, 2], [1, 2, 1], [0, 1, 1]] or grid == [[0, 0, 2], [1, 2, 1], [1, 2, 1]] or grid == [[1, 0, 2], [0, 2, 1], [1, 2, 1]] or grid == [[1, 0, 1], [1, 2, 2], [0, 2, 1]] or grid == [[0, 0, 1], [1, 2, 2], [1, 2, 1]] or grid == [[1, 0, 0], [2, 2, 1], [1, 2, 1]]:
+                        grid[0][1] = 2
+                    elif grid == [[0, 1, 2], [0, 2, 1], [1, 1, 2]] or grid == [[0, 2, 0], [1, 2, 1], [1, 1, 2]] or grid == [[0, 2, 1], [1, 2, 1], [0, 1, 2]] or grid == [[0, 2, 1], [1, 2, 0], [1, 1, 2]] or grid == [[0, 2, 1], [0, 2, 1], [1, 1, 2]] or grid == [[0, 1, 1], [1, 2, 2], [0, 2, 1]] or grid == [[0, 1, 1], [2, 2, 1], [1, 0, 2]] or grid == [[0, 1, 0], [2, 2, 1], [1, 1, 2]] or grid == [[0, 1, 2], [1, 2, 0], [1, 2, 1]] or grid == [[0, 1, 2], [0, 2, 1], [1, 2, 1]] or grid == [[0, 1, 2], [1, 2, 1], [1, 0, 2]]:
+                        grid[0][0] = 2
+                    turn -= 1
+                    print (grid)
     # --- Screen-clearing code goes here
 
     # Here, we clear the screen to white. Don't put other drawing commands
